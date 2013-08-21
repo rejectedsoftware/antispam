@@ -15,16 +15,16 @@ interface SpamFilter {
 	void applySettings(Json settings);
 
 	/// Performs immediate spam detection.
-	SpamAction determineImmediateSpamStatus(in ref Message);
+	SpamAction determineImmediateSpamStatus(in ref AntispamMessage);
 
 	/// Performs I/O heavy spam detection (e.g. using an external web service)
-	SpamAction determineAsyncSpamStatus(in ref Message);
+	SpamAction determineAsyncSpamStatus(in ref AntispamMessage);
 
 	/// Clears any learned classification information.
 	void resetClassification();
 
 	/// Manually classifies a message as spam/ham to feed learning routines.
-	void classify(in ref Message art, bool spam, bool unclassify = false);
+	void classify(in ref AntispamMessage art, bool spam, bool unclassify = false);
 }
 
 
@@ -37,8 +37,8 @@ enum SpamAction {
 	block,   /// Message is spam and should be blocked/deleted before being posted
 }
 
-struct Message {
+struct AntispamMessage {
 	InetHeaderMap headers;
 	const(ubyte)[] message;
-	string[] peerAddress; // list of hops starting from the original client
+	const(string)[] peerAddress; // list of hops starting from the original client
 }

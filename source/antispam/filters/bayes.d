@@ -55,7 +55,7 @@ class BayesSpamFilter : SpamFilter {
 	{
 	}
 
-	SpamAction determineImmediateSpamStatus(in ref Message art)
+	SpamAction determineImmediateSpamStatus(in ref AntispamMessage art)
 	{
 		import vibe.core.log;
 		double plsum = 0;
@@ -80,7 +80,7 @@ class BayesSpamFilter : SpamFilter {
 		return prob > 0.75 ? SpamAction.revoke : SpamAction.pass;
 	}
 
-	SpamAction determineAsyncSpamStatus(ref const Message)
+	SpamAction determineAsyncSpamStatus(ref const AntispamMessage)
 	{
 		return SpamAction.pass;
 	}
@@ -91,7 +91,7 @@ class BayesSpamFilter : SpamFilter {
 		updateDB();
 	}
 
-	void classify(in ref Message art, bool spam, bool unclassify = false)
+	void classify(in ref AntispamMessage art, bool spam, bool unclassify = false)
 	{
 		iterateWords(art, (w) {
 			auto cnt = m_words.get(w, Word(0, 0));
@@ -119,7 +119,7 @@ class BayesSpamFilter : SpamFilter {
 		updateDB();
 	}
 
-	private static void iterateWords(in ref Message art, scope void delegate(string) del)
+	private static void iterateWords(in ref AntispamMessage art, scope void delegate(string) del)
 	{
 		bool[string] seen;
 		iterateWords(decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")), del, seen);

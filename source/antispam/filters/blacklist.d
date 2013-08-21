@@ -32,7 +32,7 @@ class BlackListSpamFilter : SpamFilter {
 			m_blockedWords[word.get!string.toLower()] = true;
 	}
 
-	SpamAction determineImmediateSpamStatus(in ref Message art)
+	SpamAction determineImmediateSpamStatus(in ref AntispamMessage art)
 	{
 		foreach( ip; art.peerAddress )
 			foreach( prefix; m_blockedIPs )
@@ -47,7 +47,7 @@ class BlackListSpamFilter : SpamFilter {
 		return SpamAction.pass;
 	}
 
-	SpamAction determineAsyncSpamStatus(ref const Message)
+	SpamAction determineAsyncSpamStatus(ref const AntispamMessage)
 	{
 		return SpamAction.pass;
 	}
@@ -56,7 +56,7 @@ class BlackListSpamFilter : SpamFilter {
 	{
 	}
 	
-	void classify(in ref Message art, bool spam, bool unclassify = false)
+	void classify(in ref AntispamMessage art, bool spam, bool unclassify = false)
 	{
 	}
 }
