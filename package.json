@@ -1,0 +1,8 @@
+{
+	"name": "antispam",
+	"description": "Spam message filter engines",
+	"copyright": "Copyright © 2013, rejectedsoftware e.K.",
+	"license": "GPL v3",
+	"authors": ["Sönke Ludwig"],
+	"dependencies": {"vibe-d": "~master"}
+}
