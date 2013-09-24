@@ -32,7 +32,8 @@ interface SpamFilter {
 	Determins what to do with a certain message.
 */
 enum SpamAction {
-	pass,    /// Do not block the message
+	amnesty, /// Accept message no matter what later filters may decide
+	pass,    /// Do not block the message, but let other filers decide
 	revoke,  /// Message is spam and should be revoked/hidden after being posted
 	block,   /// Message is spam and should be blocked/deleted before being posted
 }
