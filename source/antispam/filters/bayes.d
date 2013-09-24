@@ -64,14 +64,12 @@ class BayesSpamFilter : SpamFilter {
 		logDiagnostic("Determining spam status");
 		iterateWords(art, (w) {
 			if (auto pc = w in m_words) {
-				if (pc.spamCount) {
-					enum bias = 0.1;
-					auto p_w_s = (pc.spamCount + bias)/cast(double)m_spamCount;
-					auto p_w_h = (pc.hamCount + bias)/cast(double)m_hamCount;
-					auto prob = p_w_s / (p_w_s + p_w_h);
-					plsum += std.math.log(1 - prob) - std.math.log(prob);
-					logDiagnostic("%s: %s", w, prob);
-				} else logDiagnostic("%s: no spam word", w);
+				enum bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
+				auto p_w_s = (pc.spamCount + bias) / cast(double)m_spamCount;
+				auto p_w_h = (pc.hamCount + bias) / cast(double)m_hamCount;
+				auto prob = p_w_s / (p_w_s + p_w_h);
+				plsum += std.math.log(1 - prob) - std.math.log(prob);
+				logDiagnostic("%s: %s (%s vs. %s)", w, prob, pc.spamCount, pc.hamCount);
 				count++;
 			} else logDiagnostic("%s: unknown word", w);
 		});
