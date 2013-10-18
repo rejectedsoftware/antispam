@@ -62,9 +62,9 @@ class BayesSpamFilter : SpamFilter {
 
 		long count = 0;
 		logDiagnostic("Determining spam status");
+		auto bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
 		iterateWords(art, (w) {
 			if (auto pc = w in m_words) {
-				enum bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
 				auto p_w_s = (pc.spamCount + bias) / cast(double)m_spamCount;
 				auto p_w_h = (pc.hamCount + bias) / cast(double)m_hamCount;
 				auto prob = p_w_s / (p_w_s + p_w_h);
