@@ -15,6 +15,7 @@ import std.range;
 import std.uni;
 import vibe.core.core;
 import vibe.core.file;
+import vibe.core.log;
 import vibe.data.json;
 import vibe.inet.message;
 import vibe.stream.operations;
@@ -38,13 +39,14 @@ class BayesSpamFilter : SpamFilter {
 		try {
 			auto f = openFile("bayes-words.json");
 			scope(exit) f.close();
-			auto j = f.readAllUTF8().parseJsonString();
-			m_spamCount = j.spamCount.get!long;
-			m_hamCount = j.hamCount.get!long;
-			foreach (string w, cnt; j.words)
-				m_words[w] = Word(cnt.spamCount.get!long, cnt.hamCount.get!long);
+			m_words = deserializeJson!(Word[string])(f.readAllUTF8());
 		} catch (Exception e) {
+			logWarn("Failed to read bayes word file: %s", e.msg);
+		}
 
+		foreach (w; m_words) {
+			m_spamCount += w.spamCount;
+			m_hamCount += w.hamCount;
 		}
 
 		m_updateTimer = createTimer(&writeWordFile);
@@ -166,20 +168,11 @@ class BayesSpamFilter : SpamFilter {
 		m_writingWords = true;
 		scope(exit) m_writingWords = false;
 
-		auto words = Json.emptyObject;
-		foreach (w, c; m_words) {
-			auto jc = Json.emptyObject;
-			jc.spamCount = c.spamCount;
-			jc.hamCount = c.hamCount;
-			words[w] = jc;
-		}
-
-		auto j = Json.emptyObject;
-		j.spamCount = m_spamCount;
-		j.hamCount = m_hamCount;
-		j.words = words;
-
 		auto f = openFile("bayes-words.json", FileMode.createTrunc);
-		writePrettyJsonString(f, j);
+		serializeToJson(f, m_words);
 	}
+}
+
+private struct SpamWords {
+
 }
