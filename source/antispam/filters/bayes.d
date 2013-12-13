@@ -30,6 +30,7 @@ class BayesSpamFilter : SpamFilter {
 		long m_spamCount, m_hamCount;
 		Timer m_updateTimer;
 		bool m_writingWords = false;
+		size_t m_maxWordLength = 64;
 	}
 
 	this()
@@ -63,7 +64,7 @@ class BayesSpamFilter : SpamFilter {
 		long count = 0;
 		logDiagnostic("Determining spam status");
 		auto bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
-		iterateWords(art, (w) {
+		iterateWords(art, m_maxWordLength, (w) {
 			if (auto pc = w in m_words) {
 				auto p_w_s = (pc.spamCount + bias) / cast(double)m_spamCount;
 				auto p_w_h = (pc.hamCount + bias) / cast(double)m_hamCount;
@@ -91,7 +92,7 @@ class BayesSpamFilter : SpamFilter {
 
 	void classify(in ref AntispamMessage art, bool spam, bool unclassify = false)
 	{
-		iterateWords(art, (w) {
+		iterateWords(art, m_maxWordLength, (w) {
 			auto cnt = m_words.get(w, Word(0, 0));
 			if (unclassify) {
 				if (spam) {
@@ -117,18 +118,18 @@ class BayesSpamFilter : SpamFilter {
 		updateDB();
 	}
 
-	private static void iterateWords(in ref AntispamMessage art, scope void delegate(string) del)
+	private static void iterateWords(in ref AntispamMessage art, size_t max_word_length, scope void delegate(string) del)
 	{
 		bool[string] seen;
-		iterateWords(decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")), del, seen);
-		iterateWords(art.headers["Subject"].decodeEncodedWords(), del, seen);
+		iterateWords(decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")), max_word_length, del, seen);
+		iterateWords(art.headers["Subject"].decodeEncodedWords(), max_word_length, del, seen);
 	}
 
-	private static void iterateWords(string str, scope void delegate(string) del, ref bool[string] seen)
+	private static void iterateWords(string str, size_t max_word_length, scope void delegate(string) del, ref bool[string] seen)
 	{
 		void handleWord(string word)
 		{
-			if (word !in seen) {
+			if (word !in seen && word.length <= max_word_length) {
 				seen[word] = true;
 				del(word);
 			}
