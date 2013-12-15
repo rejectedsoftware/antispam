@@ -172,7 +172,3 @@ class BayesSpamFilter : SpamFilter {
 		serializeToJson(f, m_words);
 	}
 }
-
-private struct SpamWords {
-
-}
