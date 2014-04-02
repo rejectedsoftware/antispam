@@ -4,5 +4,5 @@
 	"copyright": "Copyright © 2013, rejectedsoftware e.K.",
 	"license": "GPL-3.0",
 	"authors": ["Sönke Ludwig"],
-	"dependencies": {"vibe-d": "~master"}
+	"dependencies": {"vibe-d": "~>0.7.17"}
 }
