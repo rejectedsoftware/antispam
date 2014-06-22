@@ -161,6 +161,8 @@ class BayesSpamFilter : SpamFilter {
 
 	private void writeWordFile()
 	{
+		import vibe.stream.wrapper;
+
 		if (m_writingWords) {
 			updateDB();
 			return;
@@ -168,7 +170,11 @@ class BayesSpamFilter : SpamFilter {
 		m_writingWords = true;
 		scope(exit) m_writingWords = false;
 
-		auto f = openFile("bayes-words.json", FileMode.createTrunc);
-		serializeToJson(f, m_words);
+		auto f = openFile("bayes-words.json.tmp", FileMode.createTrunc);
+		auto str = StreamOutputRange(f);
+		serializeToJson(&str, m_words);
+		f.close();
+		removeFile("bayes-words.json");
+		moveFile("bayes-words.json.tmp", "bayes-words.json");
 	}
 }
