@@ -173,8 +173,9 @@ class BayesSpamFilter : SpamFilter {
 		scope(exit) m_writingWords = false;
 
 		auto f = openFile(wordsFileName~".tmp", FileMode.createTrunc);
-		auto str = StreamOutputRange(f);
-		serializeToJson(&str, m_words);
+		auto rng = StreamOutputRange(f);
+		serializeToJson(&rng, m_words);
+		rng.flush();
 		f.close();
 		if (existsFile(wordsFileName)) removeFile(wordsFileName);
 		moveFile(wordsFileName~".tmp", wordsFileName);
