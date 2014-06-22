@@ -22,6 +22,8 @@ import vibe.stream.operations;
 
 
 class BayesSpamFilter : SpamFilter {
+	enum wordsFileName = "bayes-words.json";
+
 	struct Word {
 		long spamCount;
 		long hamCount;
@@ -37,7 +39,7 @@ class BayesSpamFilter : SpamFilter {
 	this()
 	{
 		try {
-			auto f = openFile("bayes-words.json");
+			auto f = openFile(wordsFileName);
 			scope(exit) f.close();
 			m_words = deserializeJson!(Word[string])(f.readAllUTF8());
 		} catch (Exception e) {
@@ -170,11 +172,11 @@ class BayesSpamFilter : SpamFilter {
 		m_writingWords = true;
 		scope(exit) m_writingWords = false;
 
-		auto f = openFile("bayes-words.json.tmp", FileMode.createTrunc);
+		auto f = openFile(wordsFileName~".tmp", FileMode.createTrunc);
 		auto str = StreamOutputRange(f);
 		serializeToJson(&str, m_words);
 		f.close();
-		removeFile("bayes-words.json");
-		moveFile("bayes-words.json.tmp", "bayes-words.json");
+		if (existsFile(wordsFileName)) removeFile(wordsFileName);
+		moveFile(wordsFileName~".tmp", wordsFileName);
 	}
 }
