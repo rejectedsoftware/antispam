@@ -1,8 +1,8 @@
 {
 	"name": "antispam",
 	"description": "Spam message filter engines",
-	"copyright": "Copyright © 2013, rejectedsoftware e.K.",
+	"copyright": "Copyright © 2013-2014, rejectedsoftware e.K.",
 	"license": "GPL-3.0",
 	"authors": ["Sönke Ludwig"],
-	"dependencies": {"vibe-d": "~>0.7.17"}
+	"dependencies": {"vibe-d": "~>0.7.21-alpha.1"}
 }
