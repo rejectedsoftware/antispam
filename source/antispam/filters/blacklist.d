@@ -26,9 +26,9 @@ class BlackListSpamFilter : SpamFilter {
 
 	void applySettings(Json settings)
 	{
-		foreach (ip; settings.ips.opt!(Json[]))
+		foreach (ip; settings["ips"].opt!(Json[]))
 			m_blockedIPs ~= ip.get!string;
-		foreach (word; settings.words.opt!(Json[]))
+		foreach (word; settings["words"].opt!(Json[]))
 			m_blockedWords[word.get!string.toLower()] = true;
 	}
 
