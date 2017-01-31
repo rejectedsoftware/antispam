@@ -22,6 +22,8 @@ import vibe.stream.operations;
 
 
 class BayesSpamFilter : SpamFilter {
+@safe:
+
 	enum wordsFileName = "bayes-words.json";
 
 	struct Word {
@@ -39,9 +41,11 @@ class BayesSpamFilter : SpamFilter {
 	this()
 	{
 		try {
-			auto f = openFile(wordsFileName);
-			scope(exit) f.close();
-			m_words = deserializeJson!(Word[string])(f.readAllUTF8());
+			() @trusted { // for vibe.d < 0.8.0
+				auto f = openFile(wordsFileName);
+				scope(exit) f.close();
+				m_words = deserializeJson!(Word[string])(f.readAllUTF8());
+			} ();
 		} catch (Exception e) {
 			logWarn("Failed to read bayes word file: %s", e.msg);
 		}
@@ -51,7 +55,9 @@ class BayesSpamFilter : SpamFilter {
 			m_hamCount += w.hamCount;
 		}
 
-		m_updateTimer = createTimer(&writeWordFile!());
+		() @trusted { // for vibe.d < 0.8.0
+			m_updateTimer =	createTimer(&writeWordFile!());
+		} ();
 	}
 
 	@property string id() const { return "bayes"; }
@@ -122,14 +128,16 @@ class BayesSpamFilter : SpamFilter {
 		updateDB();
 	}
 
-	private static void iterateWords(in ref AntispamMessage art, size_t max_word_length, scope void delegate(string) del)
+	private static void iterateWords(in ref AntispamMessage art, size_t max_word_length, scope void delegate(string) @safe del)
 	{
 		bool[string] seen;
-		iterateWords(decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")), max_word_length, del, seen);
-		iterateWords(art.headers["Subject"].decodeEncodedWords(), max_word_length, del, seen);
+		auto msg = () @trusted { return decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")); } ();
+		auto subj = () @trusted { return art.headers["Subject"].decodeEncodedWords(); } ();
+		iterateWords(msg, max_word_length, del, seen);
+		iterateWords(subj, max_word_length, del, seen);
 	}
 
-	private static void iterateWords(string str, size_t max_word_length, scope void delegate(string) del, ref bool[string] seen)
+	private static void iterateWords(string str, size_t max_word_length, scope void delegate(string) @safe del, ref bool[string] seen)
 	{
 		void handleWord(string word)
 		{
@@ -158,7 +166,8 @@ class BayesSpamFilter : SpamFilter {
 
 	private void updateDB()()
 	{
-		m_updateTimer.rearm(1.seconds);
+		scope (exit) assert(false);
+		() @trusted { m_updateTimer.rearm(1.seconds); } ();
 	}
 
 	private void writeWordFile()()
@@ -172,12 +181,19 @@ class BayesSpamFilter : SpamFilter {
 		m_writingWords = true;
 		scope(exit) m_writingWords = false;
 
-		auto f = openFile(wordsFileName~".tmp", FileMode.createTrunc);
-		auto rng = StreamOutputRange(f);
-		serializeToJson(() @trusted { return &rng; } (), m_words);
-		rng.flush();
-		f.close();
-		if (existsFile(wordsFileName)) removeFile(wordsFileName);
-		moveFile(wordsFileName~".tmp", wordsFileName);
+		try () @trusted { // for vibe.d < 0.8.0
+			auto f = openFile(wordsFileName~".tmp", FileMode.createTrunc);
+			static if (is(typeof(streamOutputRange(f))))
+				auto rng = streamOutputRange(f);
+			else auto rng = StreamOutputRange(f);
+			serializeToJson(() @trusted { return &rng; } (), m_words);
+			rng.flush();
+			f.close();
+			if (existsFile(wordsFileName)) removeFile(wordsFileName);
+			moveFile(wordsFileName~".tmp", wordsFileName);
+		} ();
+		catch (Exception e) {
+			logWarn("Failed to save Bayes words file.");
+		}
 	}
 }

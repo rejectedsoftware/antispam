@@ -17,6 +17,8 @@ import vibe.inet.message;
 
 
 class BlackListSpamFilter : SpamFilter {
+@safe:
+
 	private {
 		string[] m_blockedIPs;
 		bool[string] m_blockedWords;
@@ -25,7 +27,7 @@ class BlackListSpamFilter : SpamFilter {
 	@property string id() const { return "blacklist"; }
 
 	void applySettings(Json settings)
-	{
+	@trusted { // vibe.d < 0.8.0
 		foreach (ip; settings["ips"].opt!(Json[]))
 			m_blockedIPs ~= ip.get!string;
 		foreach (word; settings["words"].opt!(Json[]))
@@ -39,9 +41,11 @@ class BlackListSpamFilter : SpamFilter {
 				if( ip.startsWith(prefix) )
 					return SpamAction.block;
 
-		if (art.headers["Subject"].decodeEncodedWords().containsWords(m_blockedWords))
+		auto subj = () @trusted { return art.headers["Subject"].decodeEncodedWords(); } ();
+		if (subj.containsWords(m_blockedWords))
 			return SpamAction.block;
-		if (decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")).containsWords(m_blockedWords))
+		auto msg = () @trusted { return decodeMessage(art.message, art.headers.get("Content-Transfer-Encoding", "")); } ();
+		if (msg.containsWords(m_blockedWords))
 			return SpamAction.block;
 
 		return SpamAction.pass;
@@ -63,7 +67,7 @@ class BlackListSpamFilter : SpamFilter {
 
 
 private bool containsWords(string str, in bool[string] words)
-{
+@safe {
 	bool inword = false;
 	string wordstart;
 	while (!str.empty) {

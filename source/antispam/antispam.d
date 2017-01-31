@@ -8,6 +8,8 @@ import vibe.inet.message;
 	Base interface for all spam filters.
 */
 interface SpamFilter {
+@safe:
+
 	/// Unique string identifier for the filter type
 	@property string id() const;
 
