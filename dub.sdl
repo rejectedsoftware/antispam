@@ -4,4 +4,4 @@ authors "Sönke Ludwig"
 copyright "Copyright © 2013-2014, rejectedsoftware e.K."
 license "GPL-3.0"
 
-dependency "vibe-d" version="~>0.7.21"
+dependency "vibe-d" version=">=0.7.28 <0.9.0"

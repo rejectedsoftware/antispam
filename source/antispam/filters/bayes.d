@@ -51,7 +51,7 @@ class BayesSpamFilter : SpamFilter {
 			m_hamCount += w.hamCount;
 		}
 
-		m_updateTimer = createTimer(&writeWordFile);
+		m_updateTimer = createTimer(&writeWordFile!());
 	}
 
 	@property string id() const { return "bayes"; }
@@ -156,12 +156,12 @@ class BayesSpamFilter : SpamFilter {
 		if (inword && wordstart.length) handleWord(wordstart);
 	}
 
-	private void updateDB()
+	private void updateDB()()
 	{
 		m_updateTimer.rearm(1.seconds);
 	}
 
-	private void writeWordFile()
+	private void writeWordFile()()
 	{
 		import vibe.stream.wrapper;
 
@@ -174,7 +174,7 @@ class BayesSpamFilter : SpamFilter {
 
 		auto f = openFile(wordsFileName~".tmp", FileMode.createTrunc);
 		auto rng = StreamOutputRange(f);
-		serializeToJson(&rng, m_words);
+		serializeToJson(() @trusted { return &rng; } (), m_words);
 		rng.flush();
 		f.close();
 		if (existsFile(wordsFileName)) removeFile(wordsFileName);
