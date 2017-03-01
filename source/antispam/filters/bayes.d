@@ -166,7 +166,7 @@ class BayesSpamFilter : SpamFilter {
 
 	private void updateDB()()
 	{
-		scope (exit) assert(false);
+		scope (failure) assert(false);
 		() @trusted { m_updateTimer.rearm(1.seconds); } ();
 	}
 
