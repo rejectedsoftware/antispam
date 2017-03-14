@@ -11,16 +11,6 @@ unittest {
 	import vibe.data.json : parseJsonString;
 	import std.algorithm.comparison : among;
 
-	/*
-		config.json:
-
-		[]
-			"bayes": null,
-			"blacklist": {
-				"ips": ["124.51.45.1", "41.23.11.5"]
-			}
-		]
-	*/
 	void main()
 	{
 		auto config = parseJsonString(
