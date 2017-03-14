@@ -1,3 +1,4 @@
 .dub
-__test__library__
+antispam-test-library
+libantispam.a
 dub.selections.json
