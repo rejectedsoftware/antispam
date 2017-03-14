@@ -34,6 +34,16 @@ class BlackListSpamFilter : SpamFilter {
 			m_blockedWords[word.get!string.toLower()] = true;
 	}
 
+	Json getSettings()
+	const @trusted { // vibe.d < 0.8.0
+		import std.algorithm.iteration : map;
+
+		Json ret = Json.emptyObject;
+		ret["ips"] = Json(m_blockedIPs.map!(w => Json(w)).array);
+		ret["words"] = Json(m_blockedWords.byKey.map!(w => Json(w)).array);
+		return ret;
+	}
+
 	SpamAction determineImmediateSpamStatus(in ref AntispamMessage art)
 	{
 		foreach( ip; art.peerAddress )

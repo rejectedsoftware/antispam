@@ -62,9 +62,9 @@ class BayesSpamFilter : SpamFilter {
 
 	@property string id() const { return "bayes"; }
 
-	void applySettings(Json settings)
-	{
-	}
+	void applySettings(Json settings) {}
+
+	Json getSettings() const { return Json(null); }
 
 	SpamAction determineImmediateSpamStatus(in ref AntispamMessage art)
 	{
