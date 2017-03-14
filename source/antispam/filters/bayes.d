@@ -1,13 +1,13 @@
 /**
 	Word based bayes spam filter.
 
-	Copyright: © 2013 RejectedSoftware e.K.
+	Copyright: © 2013-2017 RejectedSoftware e.K.
 	License: Subject to the terms of the General Public License version 3, as written in the included LICENSE.txt file.
 	Authors: Sönke Ludwig
 */
 module antispam.filters.bayes;
 
-import antispam.antispam;
+import antispam.filter;
 
 import std.datetime;
 import std.math;
