@@ -64,6 +64,8 @@ final class AntispamState {
 	*/
 	void loadConfig(Json config)
 	@trusted { // Json not safe for vibe.d < 0.8.0
+		m_filters = null;
+
 		switch (config.type) {
 			default:
 				throw new Exception("Invalid Antispam configuration format. Expected JSON array or object of filter/settings pairs.");
