@@ -144,6 +144,49 @@ final class AntispamState {
 		}
 		return status;
 	}
+
+	/** Feeds a message to all self-learning filters to adjust the
+		classification criteria.
+
+		Params:
+			message = The message to classify as spam or ham
+			is_spam = Determines if the message is to be considered
+				spam (`true`) or ham (`false`)
+	*/
+	void classify(in ref AntispamMessage message, bool is_spam)
+	{
+		foreach (flt; m_filters)
+			flt.classify(message, is_spam);
+	}
+
+	/** Removes the effects of a previously classified message from
+		all left-learning filters.
+
+		Note that not all self-learning filters necessarily support
+		de-classification of messages. For a correct result, it may
+		be necessary to reset the classification and to re-classify
+		all messages again.
+
+		Params:
+			message = A message that was passed to `classify`
+				previously
+			is_spam = The spam status that was passed to the
+				previous call to `classify`
+	*/
+	void declassify(in ref AntispamMessage message, bool is_spam)
+	{
+		foreach (flt; m_filters)
+			flt.classify(message, is_spam, true);
+	}
+
+	/** Resets the learned classficitaion criteria for all self-learning filters
+		in the chain.
+	*/
+	void resetClassification()
+	{
+		foreach (f; m_filters)
+			f.resetClassification();
+	}
 }
 
 /** Default implementation of full message filtering.
@@ -156,6 +199,9 @@ final class AntispamState {
 	background task to determine the asynchronous state and, if different
 	to the immediate status, passes the result to the `on_async_status`
 	callback.
+
+	Afterwards it will call `AntispamState.classify` to update any self-learning
+	filters in the chain.
 
 	Params:
 		on_immediate_status: Callback that is invoked synchronously with the
@@ -172,12 +218,15 @@ final class AntispamState {
 */
 Task filterMessage(alias on_immediate_status, alias on_async_status)(AntispamState state, AntispamMessage message)
 {
+	import std.algorithm.comparison : among;
+
 	auto ss = state.determineImmediateStatus(message);
 	on_immediate_status(ss);
 	return runTask({
 		auto as = state.determineAsyncStatus(message, ss);
 		if (ss != as)
 			on_async_status(as);
+		state.classify(message, as.among(SpamAction.revoke, SpamAction.block) != 0);
 	});
 }
 
