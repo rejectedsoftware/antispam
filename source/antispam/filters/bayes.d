@@ -102,15 +102,17 @@ class BayesSpamFilter : SpamFilter {
 
 	void classify(in ref AntispamMessage art, bool spam, bool unclassify = false)
 	{
+		import std.stdio : stderr, writefln;
+
 		iterateWords(art, m_maxWordLength, (w) {
 			auto cnt = m_words.get(w, Word(0, 0));
 			if (unclassify) {
 				if (spam) {
-					assert(cnt.spamCount > 0, "Unclassifying unknown spam word: "~w);
-					cnt.spamCount--;
+					if (cnt.spamCount > 0) cnt.spamCount--;
+					else debug stderr.writefln("Warning: Unclassifying unknown spam word: %s", w);
 				} else {
-					assert(cnt.hamCount > 0, "Unclassifying unknown ham word: "~w);
-					cnt.hamCount--;
+					if (cnt.spamCount > 0) cnt.hamCount--;
+					else debug stderr.writefln("Warning: Unclassifying unknown ham word: %s", w);
 				}
 			} else {
 				if (spam) cnt.spamCount++;
