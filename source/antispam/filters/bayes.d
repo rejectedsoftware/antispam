@@ -109,10 +109,10 @@ class BayesSpamFilter : SpamFilter {
 			if (unclassify) {
 				if (spam) {
 					if (cnt.spamCount > 0) cnt.spamCount--;
-					else debug stderr.writefln("Warning: Unclassifying unknown spam word: %s", w);
+					else debug { () @trusted { stderr.writefln("Warning: Unclassifying unknown spam word: %s", w); } (); }
 				} else {
 					if (cnt.spamCount > 0) cnt.hamCount--;
-					else debug stderr.writefln("Warning: Unclassifying unknown ham word: %s", w);
+					else debug { () @trusted { stderr.writefln("Warning: Unclassifying unknown ham word: %s", w); } (); }
 				}
 			} else {
 				if (spam) cnt.spamCount++;
