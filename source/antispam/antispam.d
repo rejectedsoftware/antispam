@@ -36,10 +36,6 @@ final class AntispamState {
 	*/
 	static void registerFilter(string filter, FilterFactory factory)
 	{
-		debug {
-			auto f = factory();
-			assert(f.id == filter, "Filter ID passed to registerFilter doesn't match ID of created filter.");
-		}
 		m_filterFactories[filter] = factory;
 	}
 
@@ -91,6 +87,7 @@ final class AntispamState {
 		auto pff = filter in m_filterFactories;
 		enforce(pff !is null, "Unknown filter ID: "~filter);
 		auto f = (*pff)();
+		assert(f.id == filter, "Filter ID passed to registerFilter doesn't match ID of created filter.");
 		f.applySettings(settings);
 		m_filters ~= f;
 	}
@@ -195,7 +192,7 @@ final class AntispamState {
 	results to get a final answer in the for of a `SpamAction` status.
 
 	It first determines the immediate spam status, calling the
-	`on_immediate_status` callback with the result. Then it starts a 
+	`on_immediate_status` callback with the result. Then it starts a
 	background task to determine the asynchronous state and, if different
 	to the immediate status, passes the result to the `on_async_status`
 	callback.
@@ -265,7 +262,7 @@ unittest {
 				if (async_status.among!(SpamAction.revoke, SpamAction.block)) {
 					// Flag or delete the stored message.
 				}
-	
+
 				// It could also theoretically happen here that async_status is amnesty
 				// or pass, so that a message that was already rejected in the first
 				// phase would be accepted in retrospective. You'll have to decides on
