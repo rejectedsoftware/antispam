@@ -1,0 +1,12 @@
+language: d
+sudo: false
+
+d:
+  - dmd
+  - ldc
+
+addons:
+  apt:
+    packages:
+      - libevent-dev
+      - libssl-dev
