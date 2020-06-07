@@ -143,7 +143,7 @@ class BayesSpamFilter : SpamFilter {
 	{
 		void handleWord(string word)
 		{
-			if (word !in seen && word.length <= max_word_length) {
+			if (word !in seen && word.walkLength <= max_word_length) {
 				seen[word] = true;
 				del(word);
 			}
@@ -198,4 +198,21 @@ class BayesSpamFilter : SpamFilter {
 			logWarn("Failed to save Bayes words file.");
 		}
 	}
+}
+
+unittest {
+	import std.conv : to;
+
+	void test(string str, string[] words...) {
+		string[] res;
+		bool[string] seen;
+		BayesSpamFilter.iterateWords(str, 10, (w) { res ~= w; }, seen);
+		assert(res == words, res.to!string);
+		foreach (w; res)
+			assert(w in seen);
+	}
+
+	test("Hello, world", "Hello", "world");
+	test("в займ, рекомендуем", "в", "займ");
+	test("в займ, рекоме", "в", "займ", "рекоме");
 }
