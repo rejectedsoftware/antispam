@@ -76,8 +76,8 @@ class BayesSpamFilter : SpamFilter {
 		auto bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
 		iterateWords(art, m_maxWordLength, (w) {
 			if (auto pc = w in m_words) {
-				auto p_w_s = (pc.spamCount + bias) / cast(double)m_spamCount;
-				auto p_w_h = (pc.hamCount + bias) / cast(double)m_hamCount;
+				auto p_w_s = m_spamCount ? (pc.spamCount + bias) / cast(double)m_spamCount : 0.0;
+				auto p_w_h = m_hamCount ? (pc.hamCount + bias) / cast(double)m_hamCount : 0.0;
 				auto prob = p_w_s / (p_w_s + p_w_h);
 				plsum += std.math.log(1 - prob) - std.math.log(prob);
 				logDiagnostic("%s: %s (%s vs. %s)", w, prob, pc.spamCount, pc.hamCount);
