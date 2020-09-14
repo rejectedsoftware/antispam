@@ -73,19 +73,36 @@ class BayesSpamFilter : SpamFilter {
 
 		long count = 0;
 		logDiagnostic("Determining spam status");
-		auto bias = 1 / cast(double)(m_spamCount + m_hamCount + 1);
+
+		// ensures that 0 < prob < 1, so that the sum of logarithm stays
+		// well defined
+		auto bias = 1;
+
 		iterateWords(art, m_maxWordLength, (w) {
-			if (auto pc = w in m_words) {
-				auto p_w_s = m_spamCount ? (pc.spamCount + bias) / cast(double)m_spamCount : 0.0;
-				auto p_w_h = m_hamCount ? (pc.hamCount + bias) / cast(double)m_hamCount : 0.0;
-				auto prob = p_w_s / (p_w_s + p_w_h);
-				plsum += std.math.log(1 - prob) - std.math.log(prob);
-				logDiagnostic("%s: %s (%s vs. %s)", w, prob, pc.spamCount, pc.hamCount);
-				count++;
-			} else logDiagnostic("%s: unknown word", w);
+			auto pc = w in m_words;
+			
+			// ignore words that haven't been seen at least 4 times
+			if (!pc || pc.spamCount + pc.hamCount < 4) {
+				logDiagnostic("%s: unfamiliar word (ham=%s spam=%s)", w,
+					pc ? pc.hamCount : 0, pc ? pc.spamCount : 0);
+				return;
+			}
+
+			assert(pc.spamCount >= 0 && pc.hamCount >= 0);
+
+			auto p_w_s = m_spamCount ? (pc.spamCount + bias) / cast(double)m_spamCount : 0.5;
+			auto p_w_h = m_hamCount ? (pc.hamCount + bias) / cast(double)m_hamCount : 0.5;
+			auto prob = p_w_s / (p_w_s + p_w_h);
+
+			plsum += std.math.log(1 - prob) - std.math.log(prob);
+			logDiagnostic("%s: %s (%s vs. %s)", w, prob, pc.spamCount, pc.hamCount);
+			count++;
 		});
 		auto prob = 1 / (1 + exp(plsum));
 		logDiagnostic("---- final probability %s (%s)", prob, plsum);
+
+		assert(!prob.isNaN, "Spam probability resulted in NaN.");
+
 		return prob > 0.75 ? SpamAction.revoke : SpamAction.pass;
 	}
 
@@ -97,6 +114,7 @@ class BayesSpamFilter : SpamFilter {
 	void resetClassification()
 	{
 		m_words = null;
+		m_spamCount = m_hamCount = 0;
 		updateDB();
 	}
 
@@ -111,7 +129,7 @@ class BayesSpamFilter : SpamFilter {
 					if (cnt.spamCount > 0) cnt.spamCount--;
 					else debug { () @trusted { stderr.writefln("Warning: Unclassifying unknown spam word: %s", w); } (); }
 				} else {
-					if (cnt.spamCount > 0) cnt.hamCount--;
+					if (cnt.hamCount > 0) cnt.hamCount--;
 					else debug { () @trusted { stderr.writefln("Warning: Unclassifying unknown ham word: %s", w); } (); }
 				}
 			} else {
