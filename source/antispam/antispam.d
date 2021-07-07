@@ -13,6 +13,7 @@ public import antispam.filter;
 
 import vibe.data.json : Json;
 import vibe.core.core : Task, runTask;
+import vibe.core.log : logException;
 
 
 /** Encapsulates a multi-stage filter state.
@@ -219,11 +220,16 @@ Task filterMessage(alias on_immediate_status, alias on_async_status)(AntispamSta
 
 	auto ss = state.determineImmediateStatus(message);
 	on_immediate_status(ss);
-	return runTask({
-		auto as = state.determineAsyncStatus(message, ss);
-		if (ss != as)
-			on_async_status(as);
-		state.classify(message, as.among(SpamAction.revoke, SpamAction.block) != 0);
+	return runTask(() nothrow {
+		auto as = ss;
+		try state.determineAsyncStatus(message, ss);
+		catch (Exception e) logException(e, "Failed to determine asynchronous spam status");
+		if (ss != as) {
+			try on_async_status(as);
+			catch (Exception e) logException(e, "Failed to report async spam status");
+		}
+		try state.classify(message, as.among(SpamAction.revoke, SpamAction.block) != 0);
+		catch (Exception e) logException(e, "Failed to classify message");
 	});
 }
 
